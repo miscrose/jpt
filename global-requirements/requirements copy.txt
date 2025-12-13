@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+pydantic
+langchain
+langchain-huggingface
+python-dotenv

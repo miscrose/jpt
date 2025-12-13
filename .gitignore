@@ -1,0 +1,26 @@
+# --- DÉPENDANCES (Lourd ! À ne jamais envoyer) ---
+/node_modules
+/.pnp
+.pnp.js
+
+# --- BUILD NEXT.JS (Sera recréé automatiquement) ---
+/.next/
+/out/
+
+# --- FICHIERS SYSTÈME INUTILES ---
+.DS_Store
+*.pem
+
+# --- LOGS D'ERREURS ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- ÉDITEURS DE CODE ---
+.vscode/
+.idea/
+
+# --- J'AI RETIRÉ LES .ENV DE CETTE LISTE ---
+# Tes fichiers .env, .env.local, etc. seront donc bien inclus/envoyés
+# comme tu l'as demandé.
