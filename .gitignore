@@ -2,7 +2,7 @@
 /node_modules
 /.pnp
 .pnp.js
-
+.next/
 # --- BUILD NEXT.JS (Sera recréé automatiquement) ---
 /.next/
 /out/
@@ -16,6 +16,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+interface-nextjs/node_modules/
 
 # --- ÉDITEURS DE CODE ---
 .vscode/
