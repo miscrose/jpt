@@ -10,8 +10,8 @@ python -m pip install --upgrade pip
 
 echo.
 echo [2/3] Installation des librairies Python (Nettoyees)...
-:: J'ai retire les doublons de ta liste et ajoute spacy qui manquait
-pip install fastapi uvicorn pydantic requests python-multipart pdfplumber langchain langchain-huggingface langchain-community python-dotenv  faiss-cpu sentence-transformers spacy huggingface-hub
+:: J'ai ajoute chromadb si tu utilises le code que je t'ai donne pour le multi-tenant
+pip install fastapi uvicorn pydantic requests python-multipart pdfplumber langchain langchain-huggingface langchain-community python-dotenv faiss-cpu chromadb sentence-transformers spacy huggingface-hub
 
 echo.
 echo [3/4] Telechargement du modele de langue Spacy (Francais)...
@@ -43,8 +43,12 @@ if not exist "package.json" (
     exit /b 1
 )
 
-echo Installation des packages npm...
+echo Installation des packages de base (npm install)...
 call npm install
+
+echo.
+echo [AJOUT] Installation du plugin pour les tableaux (remark-gfm)...
+call npm install remark-gfm
 
 cd ..
 

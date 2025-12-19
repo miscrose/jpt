@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Plus, FileText, X, Upload } from 'lucide-react';
+// CORRECTION : On importe useState directement ici
+import { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { Plus, MessageSquare, UploadCloud, PanelLeftClose } from 'lucide-react';
 import { Conversation } from '@/types';
 
 interface SidebarProps {
@@ -11,6 +12,8 @@ interface SidebarProps {
   onSelectConversation: (id: string) => void;
   onUploadPDF: (files: FileList | null) => void;
   isUploading: boolean;
+  isOpen: boolean;
+  toggleSidebar: () => void; 
 }
 
 export default function Sidebar({
@@ -20,56 +23,98 @@ export default function Sidebar({
   onSelectConversation,
   onUploadPDF,
   isUploading,
+  isOpen,
+  toggleSidebar,
 }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  
+  // CORRECTION : Utilisation directe de useState (plus besoin de React.useState)
+  const [isDragging, setIsDragging] = useState(false); 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     onUploadPDF(e.target.files);
-    // Reset input
-    if (e.target) {
-      e.target.value = '';
+    if (e.target) e.target.value = '';
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onUploadPDF(e.dataTransfer.files);
     }
   };
 
   return (
     <>
-      {/* Mobile toggle button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed left-4 top-4 z-50 lg:hidden rounded-lg bg-white dark:bg-gray-900 p-2 shadow-lg"
-      >
-        {isOpen ? <X size={20} /> : <FileText size={20} />}
-      </button>
-
-      {/* Sidebar */}
+      {/* Sidebar Container */}
       <aside
-        className={`fixed left-0 top-0 h-full w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transform transition-transform duration-300 z-40 ${
+        className={`fixed inset-y-0 left-0 z-40 w-[260px] bg-[#202123] text-gray-100 transform transition-transform duration-300 ease-in-out border-r border-white/10 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
+        }`}
       >
-        <div className="flex h-full flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex h-full flex-col p-3">
+          
+          {/* Header avec boutons */}
+          <div className="flex items-center justify-between mb-4 px-2">
+             {/* New Chat Button */}
             <button
-              onClick={onNewConversation}
-              className="w-full flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 transition-colors"
+                onClick={onNewConversation}
+                className="flex-1 flex items-center gap-2 rounded-md border border-white/20 px-3 py-3 text-sm text-white hover:bg-gray-500/10 transition-colors mr-2"
             >
-              <Plus size={18} />
-              Nouvelle conversation
+                <Plus size={16} />
+                Nouvelle conv.
+            </button>
+
+            {/* Close Button */}
+            <button 
+                onClick={toggleSidebar}
+                className="p-2 text-gray-400 hover:text-white border border-transparent hover:border-white/20 rounded-md transition-all"
+                title="Fermer la barre latérale"
+            >
+                <PanelLeftClose size={20} />
             </button>
           </div>
 
-          {/* PDF Upload */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Documents PDF
-            </label>
-            <label className="flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              <Upload size={18} />
-              <span className="text-sm">
-                {isUploading ? 'Upload en cours...' : 'Ajouter PDF'}
-              </span>
+          {/* Drop Zone Upload Area */}
+          <div className="mb-6 px-1">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 pl-2">
+              Base de connaissances
+            </h3>
+            <label
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${
+                isDragging 
+                  ? 'border-blue-500 bg-blue-500/10 scale-[1.02]' 
+                  : 'border-gray-600 hover:border-gray-500 hover:bg-gray-700/30'
+              }`}
+            >
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                {isUploading ? (
+                  <div className="animate-pulse flex flex-col items-center">
+                    <UploadCloud className="w-8 h-8 mb-2 text-blue-400" />
+                    <p className="text-xs text-gray-400">Traitement...</p>
+                  </div>
+                ) : (
+                  <>
+                    <UploadCloud className={`w-8 h-8 mb-2 ${isDragging ? 'text-blue-400' : 'text-gray-400'}`} />
+                    <p className="mb-1 text-xs text-gray-400 text-center px-2">
+                      <span className="font-semibold">PDF</span> Drag & Drop
+                    </p>
+                  </>
+                )}
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -82,38 +127,42 @@ export default function Sidebar({
             </label>
           </div>
 
-          {/* Conversations list */}
-          <div className="flex-1 overflow-y-auto p-2">
+          {/* History List */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 pl-2 sticky top-0 bg-[#202123] py-2">
+              Historique
+            </h3>
             <div className="space-y-1">
               {conversations.map((conv) => (
                 <button
                   key={conv.id}
                   onClick={() => onSelectConversation(conv.id)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`group relative flex w-full items-center gap-3 rounded-md px-3 py-3 text-sm transition-colors ${
                     currentConversationId === conv.id
-                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                      ? 'bg-[#343541] text-white'
+                      : 'text-gray-100 hover:bg-[#2A2B32]'
                   }`}
                 >
-                  <div className="truncate">{conv.title}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                    {conv.messages.length} message{conv.messages.length > 1 ? 's' : ''}
+                  <MessageSquare size={16} className="text-gray-400 group-hover:text-white" />
+                  <div className="flex-1 truncate text-left relative z-10">
+                    {conv.title || "Nouvelle conversation"}
                   </div>
                 </button>
               ))}
             </div>
           </div>
+
+        
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
+      {/* Overlay mobile (cliquer dehors ferme le menu) */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-gray-900/80 z-30 lg:hidden backdrop-blur-sm"
+          onClick={toggleSidebar}
         />
       )}
     </>
   );
 }
-

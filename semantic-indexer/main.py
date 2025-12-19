@@ -18,7 +18,7 @@ os.makedirs(VECTOR_FOLDER, exist_ok=True)
 FAISS_INDEX_PATH = os.path.join(VECTOR_FOLDER, "faiss.index")
 
 # Instanciation de l'Embedding Model
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
 # Instance de la base de données vectorielle (chargée en mémoire)
 vectorstore: Optional[FAISS] = None
@@ -90,7 +90,11 @@ def index_document(request: IngestRequest):
         raise HTTPException(status_code=400, detail="Contenu du document vide.")
 
     # 1. Découpage (Chunking)
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter(
+    chunk_size=512, 
+    chunk_overlap=128,
+    separators=["\n\n", "\n", ".", " ", ""] 
+)
     chunks = splitter.split_text(text)
     docs = [Document(page_content=c, metadata={"source": source}) for c in chunks]
 

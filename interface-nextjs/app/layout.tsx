@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DocQA-MS - Assistant Médical Intelligent",
-  description: "Interface de chat intelligent pour questions-réponses sur documents médicaux",
+  title: "DocQA - Assistant Médical",
+  description: "Interface intelligente d'analyse de documents médicaux",
 };
 
 export default function RootLayout({
@@ -23,9 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full bg-white dark:bg-[#343541] text-gray-900 dark:text-gray-100`}
       >
         {children}
       </body>
