@@ -89,10 +89,10 @@ def index_document(request: IngestRequest):
     if not text.strip():
         raise HTTPException(status_code=400, detail="Contenu du document vide.")
 
-    # 1. Découpage (Chunking)
+# 1. Découpage (Chunking)
     splitter = RecursiveCharacterTextSplitter(
-    chunk_size=512, 
-    chunk_overlap=128,
+    chunk_size=2000,   
+    chunk_overlap=200,  
     separators=["\n\n", "\n", ".", " ", ""] 
 )
     chunks = splitter.split_text(text)

@@ -1,3 +1,4 @@
+
 import os
 import uvicorn
 import requests
@@ -27,12 +28,13 @@ def load_llm():
         return
 
     try:
-        # Température 0.01 pour rigueur maximale
+        # Température très basse pour éviter les hallucinations
         llm = HuggingFaceEndpoint(
             repo_id="mistralai/Mistral-7B-Instruct-v0.2",
+          
             huggingfacehub_api_token=hf_token,
-            temperature=0.01,
-            max_new_tokens=1024,
+            temperature=0.01,       # <--- Rigueur maximale
+            max_new_tokens=2048,    # <--- Augmenté pour éviter les tableaux coupés
         )
         chat_model = ChatHuggingFace(llm=llm)
         print("✅ LLM (Mistral-7B) chargé.")
@@ -62,30 +64,41 @@ class RetrievalResponse(BaseModel):
 
 def build_rag_messages(prompt: str, context: str, history: List[Dict[str, str]]):
     """
-    Prompt 'DRACONIEN' : Interdiction totale de politesse ou de hors-sujet.
+    Prompt 'ARCHITECTE' : Force le Markdown, interdit le bavardage et gère le multi-patient.
     """
     system_instruction = (
-        "TASK: You are a strict medical data extraction bot. NOT an assistant.\n"
-        "OUTPUT LANGUAGE: FRENCH ONLY.\n\n"
+        "RÔLE : Tu es un automate d'extraction de données médicales. Tu n'es PAS une personne.\n"
+        "LANGUE : FRANÇAIS UNIQUEMENT.\n\n"
         
-        "--- RULES ---\n"
-        "1. USE ONLY the provided 'CONTEXTE DOSSIER'.\n"
-        "2. IF the answer is found in the context: Answer directly in French. Be concise.\n"
-        "3. IF the answer is NOT in the context (e.g., Japan, Recipes, weather, politics...):\n"
-        "   YOU MUST OUTPUT EXACTLY THIS PHRASE AND NOTHING ELSE:\n"
-        "   'Je suis un assistant médical. Cette demande est hors contexte ou absente du dossier.'\n"
-        "4. DO NOT APOLOGIZE. DO NOT SAY 'I'm sorry'. DO NOT PROVIDE THE RECIPE.\n"
-        "5. STOP generating immediately after the rejection phrase.\n"
+        "RÈGLES DE FORMATAGE (CRUCIAL) :\n"
+        "1. Pour les tableaux, utilise EXCLUSIVEMENT le format Markdown standard avec des barres verticales (|).\n"
+        "   Exemple obligatoire :\n"
+        "   | Patient | Symptôme |\n"
+        "   |---------|----------|\n"
+        "   | M. X    | Toux     |\n"
+        "2. Assure-toi de faire un saut de ligne après chaque rangée du tableau.\n"
+        "3. N'invente JAMAIS de balises comme [Tableau] ou XML.\n\n"
+        
+        "RÈGLES DE COMPORTEMENT :\n"
+        "1. Réponds DIRECTEMENT par le tableau ou l'information.\n"
+        "2. NE DIS RIEN D'AUTRE. Pas de bonjour, pas d'intro, pas de 'Voici le tableau'.\n"
+        "3. NE SIGNE JAMAIS à la fin (Interdit de dire 'Je suis un assistant...').\n"
+        "4. ATTENTION AUX PATIENTS MULTIPLES : Le contexte peut contenir plusieurs dossiers différents.\n"
+        "   Ne mélange pas les antécédents d'un patient avec ceux d'un autre. Vérifie bien les séparations.\n\n"
+        
+        "CAS D'ERREUR :\n"
+        "Si l'information n'est PAS dans le 'CONTEXTE DOSSIER', réponds UNIQUEMENT :\n"
+        "'Information absente du dossier.'"
     )
     
     messages = [SystemMessage(content=system_instruction)]
 
-    # On réduit l'historique au strict minimum (1 message) pour éviter qu'il ne s'inspire des bêtises d'avant
+    # On garde l'historique court
     for m in history[-1:]: 
         messages.append({"role": m["role"], "content": m["content"]})
 
     # Le prompt final
-    user_prompt = f"--- CONTEXTE DOSSIER ---\n{context}\n\n--- QUESTION UTILISATEUR ---\n{prompt}"
+    user_prompt = f"--- CONTEXTE DOSSIER ---\n{context}\n\n--- QUESTION ---\n{prompt}"
     messages.append({"role": "user", "content": user_prompt})
 
     return messages
@@ -113,7 +126,6 @@ def ask_qa(input_data: QAInput):
         raise HTTPException(status_code=503, detail="Le modèle LLM n'est pas chargé.")
 
     # 1. RAG : Récupération des documents
-    # On a supprimé le filtre Python ici. On fait confiance au Prompt.
     retrieval_endpoint = f"{INDEXER_URL}/retrieve-chunks"
     try:
         response = requests.post(
@@ -126,7 +138,6 @@ def ask_qa(input_data: QAInput):
         raise HTTPException(status_code=503, detail=f"Erreur Indexeur: {e}")
 
     # 2. Pas de docs ?
-    # Si l'indexeur ne trouve RIEN du tout, on coupe court.
     if not relevant_chunks:
         return QAResponse(
             answer="Je suis un assistant médical. Cette demande est hors contexte ou absente du dossier.", 
@@ -136,6 +147,13 @@ def ask_qa(input_data: QAInput):
 
     # 3. Génération de la réponse
     context = "\n\n".join([f"[Source: {chunk.source}]\n{chunk.content}" for chunk in relevant_chunks])
+
+    # DEBUG : Affichage console pour vérifier ce que l'IA lit
+    print("==================================================")
+    print("🔍 CE QUE L'IA REÇOIT (CONTEXTE) :")
+    print(context)
+    print("==================================================")
+    
     sources = list(set([chunk.source for chunk in relevant_chunks]))
     
     messages = build_rag_messages(input_data.prompt, context, input_data.history)
