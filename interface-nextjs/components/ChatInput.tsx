@@ -5,7 +5,7 @@ import { Send, Loader2, Paperclip } from 'lucide-react';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
-  // NOUVEAU : On ajoute la fonction d'upload ici
+ 
   onUpload: (files: FileList | null) => void; 
   disabled?: boolean;
 }
@@ -14,7 +14,7 @@ export default function ChatInput({ onSend, onUpload, disabled }: ChatInputProps
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // NOUVEAU : Référence pour le input file caché
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,17 +39,17 @@ export default function ChatInput({ onSend, onUpload, disabled }: ChatInputProps
     }
   };
 
-  // NOUVEAU : Fonction pour déclencher le clic sur l'input caché
+
   const handlePaperclipClick = () => {
     fileInputRef.current?.click();
   };
 
-  // NOUVEAU : Quand un fichier est sélectionné
+ 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       onUpload(e.target.files);
     }
-    // Reset pour permettre de re-uploader le même fichier si besoin
+
     if (e.target) e.target.value = '';
   };
 
@@ -58,7 +58,7 @@ export default function ChatInput({ onSend, onUpload, disabled }: ChatInputProps
       <div className="mx-auto max-w-3xl relative">
         <div className="relative flex items-end w-full p-3 bg-white dark:bg-[#2f2f2f] border border-gray-200 dark:border-gray-700 shadow-xl rounded-2xl ring-offset-2 focus-within:ring-2 focus-within:ring-blue-500/50">
           
-          {/* NOUVEAU : L'input caché qui fait le travail */}
+       
           <input
             type="file"
             ref={fileInputRef}
@@ -68,7 +68,7 @@ export default function ChatInput({ onSend, onUpload, disabled }: ChatInputProps
             className="hidden"
           />
 
-          {/* Bouton Trombone actif */}
+
           <button 
             type="button"
             onClick={handlePaperclipClick}
