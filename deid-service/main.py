@@ -1,17 +1,17 @@
 import os
 import uvicorn
 import spacy
-import re  # Pour les Expressions Régulières
+import re 
 import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
-# --- Configuration ---
+
 
 INDEXER_URL = os.getenv("INDEXER_URL", "http://127.0.0.1:8001") 
 
-# Modèle NLP
+
 MODEL_NAME = "fr_core_news_md" 
 nlp = None
 COUNTER_FILE = "patient_counter.txt" 
@@ -31,7 +31,7 @@ def load_nlp_model():
         os.makedirs(DEBUG_DIR)
         print(f"📂 Dossier de debug créé : {DEBUG_DIR}")
 
-# --- FONCTION GESTION COMPTEUR ---
+
 def get_next_patient_id():
     """Gère l'auto-incrémentation des IDs patients."""
     current_id = 1
@@ -55,7 +55,7 @@ def get_next_patient_id():
         
     return patient_label
 
-# --- Schémas de Données ---
+
 
 class DeIDRequest(BaseModel):
     content: str
@@ -65,40 +65,34 @@ class DeIDResponse(BaseModel):
     anonymized_content: str
     source: str
 
-# --- CŒUR DU SYSTÈME : Fonction d'Anonymisation Hybride ---
-# MODIFICATION ICI : On ajoute le paramètre 'patient_label'
+
 def advanced_anonymization(text: str, patient_label: str) -> str:
     """
     Remplace les noms par l'ID du patient (ex: Patient_1) pour que le tableau final soit clair.
     """
     
-    # 1. Masquer les EMAILS
+  
     text = re.sub(r'[\w\.-]+@[\w\.-]+\.\w+', '[EMAIL_MASQUÉ]', text)
     
-    # 2. Masquer les TÉLÉPHONES
+  
     phone_pattern = r'(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}'
     text = re.sub(phone_pattern, '[TÉL_MASQUÉ]', text)
 
-    # 3. Masquer les Champs de Formulaire (Nom : X, Prénom : Y)
-    # ICI C'EST LA MAGIE : On remplace par le label (Patient_1) !
     field_pattern = r'(Nom|Prénom|Patient|Surnom)\s*[:\.]?\s+([A-ZÀ-ÿ][a-zÀ-ÿ]+|[A-Z]{2,})'
-    # La regex va écrire : "Nom : Patient_1"
     text = re.sub(field_pattern, f"\\1 : {patient_label}", text, flags=re.IGNORECASE)
 
-    # 4. Masquer les NOMS après civilités (Dr., M., Mme)
-    # On fait attention : Si c'est un Dr, on met [MEDECIN] pour ne pas confondre avec le patient
-    # Si c'est Monsieur/Madame, on met le patient_label
+
     text = re.sub(r'(Dr\.?)\s+([A-ZÀ-ÿ][a-zÀ-ÿ]+)', r'\1 [MEDECIN]', text)
     text = re.sub(r'(Monsieur|Madame|M\.|Mme)\s+([A-ZÀ-ÿ][a-zÀ-ÿ]+)', f"\\1 {patient_label}", text)
 
-    # 5. NLP (SpaCy) - Filet de sécurité
+ 
     doc = nlp(text)
     entities_to_replace = []
     
     for ent in doc.ents:
         if ent.label_ in ["PER"]: 
             if patient_label not in ent.text and "[MEDECIN]" not in ent.text and "[EMAIL_MASQUÉ]" not in ent.text:
-                # On remplace tout nom restant par le label du patient
+            
                 entities_to_replace.append((ent.start_char, ent.end_char, patient_label))
 
     entities_to_replace.sort(key=lambda x: x[0], reverse=True)
@@ -110,7 +104,6 @@ def advanced_anonymization(text: str, patient_label: str) -> str:
         
     return text
 
-# --- FastAPI App ---
 
 app = FastAPI(title="De-ID Microservice (Injection ID Patient)")
 
@@ -126,12 +119,11 @@ def anonymize_and_index(request: DeIDRequest):
     unique_patient_id = get_next_patient_id()
     print(f"🆔 Nouveau document : {request.source} -> ID attribué : {unique_patient_id}")
 
-    # 1. Exécution de l'anonymisation EN PASSANT L'ID
+
     try:
-        # ON PASSE L'ID ICI !
         clean_text = advanced_anonymization(request.content, unique_patient_id)
         
-        # SAUVEGARDE DEBUG
+
         filename = f"{unique_patient_id}.txt"
         filepath = os.path.join(DEBUG_DIR, filename)
         with open(filepath, "w", encoding="utf-8") as f:
@@ -142,12 +134,12 @@ def anonymize_and_index(request: DeIDRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur interne d'anonymisation : {e}")
 
-    # 2. Envoi à l'Indexeur (Port 8001)
+
     ingest_endpoint = f"{INDEXER_URL}/index-chunks"
     
     data = {
         "content": clean_text,
-        "source": request.source # On garde le nom du fichier pour l'affichage des sources
+        "source": request.source 
     }
 
     try:
