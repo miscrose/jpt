@@ -10,11 +10,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# LangChain Imports
+
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langchain_core.messages import SystemMessage
 
-# --- Configuration et Modèles ---
+
 
 INDEXER_URL = os.getenv("INDEXER_URL", "http://127.0.0.1:8001") 
 
@@ -28,13 +28,13 @@ def load_llm():
         return
 
     try:
-        # Température très basse pour éviter les hallucinations
+
         llm = HuggingFaceEndpoint(
             repo_id="mistralai/Mistral-7B-Instruct-v0.2",
           
             huggingfacehub_api_token=hf_token,
-            temperature=0.01,       # <--- Rigueur maximale
-            max_new_tokens=2048,    # <--- Augmenté pour éviter les tableaux coupés
+            temperature=0.01,       
+            max_new_tokens=2048,    
         )
         chat_model = ChatHuggingFace(llm=llm)
         print("✅ LLM (Mistral-7B) chargé.")
@@ -42,7 +42,7 @@ def load_llm():
         print(f"⚠️ Erreur de chargement du LLM : {e}")
 
 
-# --- Schémas ---
+
 
 class QAInput(BaseModel):
     prompt: str = Field(..., description="La question de l'utilisateur.")
@@ -93,16 +93,16 @@ def build_rag_messages(prompt: str, context: str, history: List[Dict[str, str]])
     
     messages = [SystemMessage(content=system_instruction)]
 
-    # On garde l'historique court
+
     for m in history[-1:]: 
         messages.append({"role": m["role"], "content": m["content"]})
 
-    # Le prompt final
+
     user_prompt = f"--- CONTEXTE DOSSIER ---\n{context}\n\n--- QUESTION ---\n{prompt}"
     messages.append({"role": "user", "content": user_prompt})
 
     return messages
-# --- FastAPI App ---
+
 
 app = FastAPI(title="LLM QA Microservice")
 
@@ -118,14 +118,14 @@ app.add_middleware(
 async def startup_event():
     load_llm()
 
-# --- Endpoints ---
+
 
 @app.post("/ask-qa", response_model=QAResponse)
 def ask_qa(input_data: QAInput):
     if chat_model is None:
         raise HTTPException(status_code=503, detail="Le modèle LLM n'est pas chargé.")
 
-    # 1. RAG : Récupération des documents
+
     retrieval_endpoint = f"{INDEXER_URL}/retrieve-chunks"
     try:
         response = requests.post(
@@ -137,7 +137,7 @@ def ask_qa(input_data: QAInput):
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Erreur Indexeur: {e}")
 
-    # 2. Pas de docs ?
+
     if not relevant_chunks:
         return QAResponse(
             answer="Je suis un assistant médical. Cette demande est hors contexte ou absente du dossier.", 
@@ -145,10 +145,9 @@ def ask_qa(input_data: QAInput):
             context_chunks=0
         )
 
-    # 3. Génération de la réponse
+
     context = "\n\n".join([f"[Source: {chunk.source}]\n{chunk.content}" for chunk in relevant_chunks])
 
-    # DEBUG : Affichage console pour vérifier ce que l'IA lit
     print("==================================================")
     print("🔍 CE QUE L'IA REÇOIT (CONTEXTE) :")
     print(context)
