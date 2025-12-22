@@ -6,14 +6,12 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import pdfplumber
 
-# --- Configuration ---
+
 
 DOCS_FOLDER = os.getenv("DOCS_FOLDER", "documents")
 os.makedirs(DOCS_FOLDER, exist_ok=True)
 
-# --- CORRECTION ICI ---
-# Avant : On visait l'Indexeur (8001) direct.
-# Maintenant : On vise l'ANONYMISEUR (8003).
+
 ANONYMIZER_SERVICE_URL = os.getenv("ANONYMIZER_URL", "http://127.0.0.1:8003") 
 
 app = FastAPI(title="Document Ingestor Microservice")
@@ -26,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Fonctions ---
+
 
 def pdf_to_text(path: Path) -> str:
     text = ""
@@ -39,7 +37,7 @@ def pdf_to_text(path: Path) -> str:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur de lecture PDF: {e}")
 
-# --- Endpoints ---
+
 
 @app.post("/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...)):
@@ -50,7 +48,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     """
     file_path = Path(DOCS_FOLDER) / file.filename
 
-    # 1. Sauvegarde locale
+  
     try:
         content = await file.read()
         file_path.write_bytes(content)
@@ -59,13 +57,12 @@ async def upload_pdf(file: UploadFile = File(...)):
     finally:
         await file.close()
 
-    # 2. Conversion PDF -> Texte Brut
+
     raw_text = pdf_to_text(file_path)
     if not raw_text.strip():
         raise HTTPException(status_code=400, detail="Le fichier PDF est vide ou illisible.")
 
-    # 3. --- CORRECTION MAJEURE ---
-    # On envoie vers le service d'Anonymisation (Port 8003)
+
     target_endpoint = f"{ANONYMIZER_SERVICE_URL}/anonymize-text"
     
     data = {
@@ -74,7 +71,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     }
 
     try:
-        # Appel à l'Anonymiseur
+  
         response = requests.post(target_endpoint, json=data)
         response.raise_for_status()
         
