@@ -165,10 +165,10 @@ Une fois les services lancés, accédez à la documentation Swagger :
 ##  Technologies Utilisées
 
 - **Backend** : FastAPI, Uvicorn
-- **IA/ML** : LangChain, HuggingFace Transformers, Mistral-7B
+- **IA/ML** : LangChain, HuggingFace , Mistral-7B
 - **NLP** : Spacy (fr_core_news_md)
 - **Vector DB** : FAISS
-- **Frontend** : Next.js, TypeScript, React
+- **Frontend** : Next.js, TypeScript, 
 - **PDF Processing** : pdfplumber
 
 ---
