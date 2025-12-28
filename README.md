@@ -21,3 +21,41 @@ graph LR
   LLM -->|Recherche| Index
   Index -->|Contexte| LLM
   LLM -->|Réponse| User
+
+
+
+  ### 📦 Détail des Microservices
+
+| Service | Port | Description |
+| :--- | :--- | :--- |
+| **Doc-Ingestor** | `8000` | Reçoit les PDF, extrait le texte brut et l'envoie au service de sécurité. |
+| **DeID-Service** | `8003` | **Sécurité**. Identifie et masque les données sensibles (Noms, Tels) avant traitement IA. |
+| **Semantic-Indexer** | `8001` | Convertit le texte anonymisé en vecteurs (Embeddings) et les stocke. |
+| **LLM-QA** | `8002` | Le "Cerveau". Interroge la base vectorielle et génère la réponse via Mistral-7B. |
+| **Frontend** | `3000` | Interface utilisateur (Next.js) pour l'upload et le Chat médical. |
+
+---
+
+## 🚀 Installation et Démarrage (Windows)
+
+Ce projet inclut des scripts d'automatisation pour Windows afin de simplifier l'installation et le lancement.
+
+### 1. Pré-requis
+* **Python 3.9+** (Assurez-vous qu'il est dans le PATH).
+* **Node.js** (Version LTS recommandée).
+* Un compte **HuggingFace** (pour obtenir un Token d'accès aux modèles).
+
+### 2. Installation Automatisée
+Lancez simplement le script d'installation des dépendances.
+
+1. Double-cliquez sur le fichier **`dependence.bat`**.
+   * *Ce script va mettre à jour pip, installer toutes les librairies Python (FastAPI, LangChain, Spacy...), télécharger le modèle de langue français, et installer les modules Node.js pour le frontend.*
+
+### 3. Configuration API
+Avant de lancer, vous devez configurer l'accès au modèle d'IA.
+
+1. Allez dans le dossier `llm-qa-module`.
+2. Créez un fichier nommé `.env`.
+3. Ajoutez votre token HuggingFace à l'intérieur :
+   ```bash
+   HF_TOKEN=votre_token_huggingface_ici
