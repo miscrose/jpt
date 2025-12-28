@@ -1,15 +1,15 @@
-# 🏥 MediRAG - Assistant Médical Intelligent & Sécurisé
+# 🏥 DocQA-MS - Assistant Médical Intelligent 
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Microservices-009688)
 ![AI](https://img.shields.io/badge/Mistral--7B-RAG-orange)
 ![Security](https://img.shields.io/badge/DeID-Anonymization-red)
 
-**MediRAG** est une solution d'intelligence artificielle permettant d'interroger des dossiers médicaux (PDF) en langage naturel. Le projet se distingue par une **architecture microservices** et un module d'**anonymisation (De-Identification)** qui protège les données patients avant l'indexation.
+**DocQA-MS** est une solution d'intelligence artificielle permettant d'interroger des dossiers médicaux (PDF) en langage naturel. Le projet se distingue par une **architecture microservices** et un module d'**anonymisation (De-Identification)** qui protège les données patients avant l'indexation.
 
 ---
 
-## 🏗️ Architecture du Projet
+##  Architecture du Projet
 
 Le système est composé de 5 microservices interconnectés :
 
@@ -25,7 +25,7 @@ graph LR
   LLM -->|Réponse| User
 ```
 
-### 📦 Détail des Microservices
+###  Détail des Microservices
 
 | Service | Port | Description |
 |---------|------|-------------|
@@ -37,7 +37,7 @@ graph LR
 
 ---
 
-## 🚀 Installation et Démarrage (Windows)
+##  Installation et Démarrage (Windows)
 
 Ce projet inclut des scripts d'automatisation (`.bat`) pour simplifier l'installation et le lancement.
 
@@ -83,9 +83,9 @@ Plus besoin d'ouvrir 5 terminaux manuellement !
 
 ---
 
-## 🔒 Focus Technique & Sécurité
+##  Focus Technique & Sécurité
 
-### 🛡️ Pipeline d'Anonymisation (De-ID)
+###  Pipeline d'Anonymisation (De-ID)
 
 Le système respecte le principe de **Privacy by Design**. Le LLM ne voit jamais les données brutes.
 
@@ -93,7 +93,7 @@ Le système respecte le principe de **Privacy by Design**. Le LLM ne voit jamais
 2. **Masquage Regex** : Les emails et numéros de téléphone sont remplacés par des balises génériques
 3. **NLP (Spacy)** : Les noms de patients et médecins sont détectés et remplacés par des pseudonymes (`Patient_1`, `Dr_X`)
 
-### 🧠 Moteur IA (RAG)
+###  Moteur IA (RAG)
 
 - **Modèle** : `mistralai/Mistral-7B-Instruct-v0.2` (via HuggingFace API)
 - **Embeddings** : `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
@@ -101,7 +101,7 @@ Le système respecte le principe de **Privacy by Design**. Le LLM ne voit jamais
 
 ---
 
-## 📋 Structure du Projet
+##  Structure du Projet
 
 ```
 .
@@ -117,7 +117,7 @@ Le système respecte le principe de **Privacy by Design**. Le LLM ne voit jamais
 
 ---
 
-## 🔧 Développement
+##  Développement
 
 ### Lancer un service individuellement
 
@@ -154,7 +154,7 @@ Une fois les services lancés, accédez à la documentation Swagger :
 
 ---
 
-## 📝 Notes Importantes
+##  Notes Importantes
 
 - Les données anonymisées sont sauvegardées dans `deid-service/debug_anonymized_docs/` pour vérification
 - La base vectorielle FAISS est stockée dans `semantic-indexer/vector_store/`
@@ -162,7 +162,7 @@ Une fois les services lancés, accédez à la documentation Swagger :
 
 ---
 
-## 🛠️ Technologies Utilisées
+##  Technologies Utilisées
 
 - **Backend** : FastAPI, Uvicorn
 - **IA/ML** : LangChain, HuggingFace Transformers, Mistral-7B
@@ -173,13 +173,5 @@ Une fois les services lancés, accédez à la documentation Swagger :
 
 ---
 
-## 📄 Licence
 
-Projet de Fin d'Études (PFE)
-
----
-
-## 👥 Auteurs
-
-Projet développé dans le cadre d'un Projet de Fin d'Études.
 
